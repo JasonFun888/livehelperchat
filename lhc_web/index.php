@@ -17,8 +17,8 @@
 
 @ini_set('error_reporting', 0);
 @ini_set('display_errors', 0);
-// @ini_set('session.save_handler', 'redis');
-// @session_save_path("tcp://{$_SERVER['REDIS_HOST']}:6379");
+#@ini_set('session.save_handler', 'redis');
+#@session_save_path("tcp://{$_SERVER['REDIS_HOST']}:6379");
 @ini_set('session.gc_maxlifetime', 200000);
 @ini_set('session.cookie_lifetime', 2000000);
 @ini_set('session.cookie_httponly',1);
