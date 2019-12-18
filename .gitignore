@@ -1,1 +1,7 @@
 .idea
+
+# Ignore ZendStudio Project Files
+.buildpath
+.project
+.settings/
+
