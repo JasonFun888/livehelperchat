@@ -8,6 +8,23 @@ header('Cache-Control: no-store, no-cache, must-revalidate' );
 header('Cache-Control: post-check=0, pre-check=0', false );
 header('Pragma: no-cache' );
 
+if (isset($_SERVER['HTTP_ORIGIN']) && !empty($_SERVER['HTTP_ORIGIN'])) {
+    $validDomains = (string)erLhcoreClassModelChatConfig::fetch('valid_domains')->current_value;
+    if (!empty($validDomains)) {
+        $validDomainsList = explode(',',$validDomains);
+        $validDomain = false;
+        foreach ($validDomainsList as $validDomainItem) {
+            if (strpos($_SERVER['HTTP_ORIGIN'],trim($validDomainItem)) !== false) {
+                $validDomain = true;
+            }
+        }
+
+        if ($validDomain == false) {
+            exit;
+        }
+    }
+}
+
 if (erLhcoreClassModelChatConfig::fetch('hide_disabled_department')->current_value == 1 && is_array($Params['user_parameters_unordered']['department'])){
 	try {
 		erLhcoreClassChat::validateFilterIn($Params['user_parameters_unordered']['department']);
@@ -51,6 +68,23 @@ if (isset($Params['user_parameters_unordered']['theme']) && (int)$Params['user_p
 			$theme = false;
 		}
 	}
+}
+
+if ($theme instanceof erLhAbstractModelWidgetTheme && isset($theme->bot_configuration_array['detect_language']) && $theme->bot_configuration_array['detect_language'] == true) {
+    erLhcoreClassChatValidator::setLanguageByBrowser();
+}
+
+if ($theme instanceof erLhAbstractModelWidgetTheme && isset($theme->bot_configuration_array['load_w2']) && $theme->bot_configuration_array['load_w2'] == true) {
+    $tpl = erLhcoreClassTemplate::getInstance('lhchat/getstatus/getstatus_migrate.tpl.php');
+    $tpl->set('uparams',$Params['user_parameters_unordered']);
+    $tpl->set('depId',$Params['user_parameters_unordered']['department']);
+    $tpl->set('mode','widget');
+    $tpl->set('position',$Params['user_parameters_unordered']['position']);
+    $tpl->set('click',$Params['user_parameters_unordered']['click']);
+    $tpl->set('leaveamessage',$Params['user_parameters_unordered']['leaveamessage'] == 'true');
+    $tpl->set('disable_pro_active',$Params['user_parameters_unordered']['disable_pro_active'] == 'true');
+    echo $tpl->fetch();
+    exit;
 }
 
 $tpl->set('referrer',isset($_GET['r']) ? rawurldecode($_GET['r']) : '');

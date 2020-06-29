@@ -461,17 +461,17 @@ if (isset($_POST['askQuestion']))
     {
 
        $chat->time = $chat->pnd_time = time();
-       $chat->status = 0;
+       $chat->status = erLhcoreClassModelChat::STATUS_PENDING_CHAT;
        $chat->setIP();
        $chat->hash = erLhcoreClassChat::generateHash();
        $chat->referrer = isset($_POST['URLRefer']) ? $_POST['URLRefer'] : '';
        $chat->session_referrer = isset($_POST['r']) ? $_POST['r'] : '';
 
        if ($chat->nick == '') {
-       		$chat->nick = erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Visitor');
+       		$chat->nick = 'Visitor';
        }
        
-       erLhcoreClassModelChat::detectLocation($chat);
+       erLhcoreClassModelChat::detectLocation($chat, (string)$Params['user_parameters_unordered']['vid']);
      
        $chat->priority = is_numeric($Params['user_parameters_unordered']['priority']) ? (int)$Params['user_parameters_unordered']['priority'] : $chat->department->priority;
        $chat->chat_initiator = erLhcoreClassModelChat::CHAT_INITIATOR_PROACTIVE;
@@ -508,13 +508,13 @@ if (isset($_POST['askQuestion']))
        $userInstance->chat_id = $chat->id;
        $userInstance->conversion_id = 0;
 
-        if ($chat->nick != erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Visitor')) {
+        if ($chat->nick != 'Visitor') {
             $onlineAttr = $userInstance->online_attr_system_array;
             if (!isset($onlineAttr['username'])){
                 $onlineAttr['username'] = $chat->nick;
                 $userInstance->online_attr_system = json_encode($onlineAttr);
             }
-        } elseif ($chat->nick == erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Visitor')){
+        } elseif ($chat->nick == 'Visitor'){
             if ($userInstance->nick && $userInstance->has_nick) {
                 $chat->nick = $userInstance->nick;
             }

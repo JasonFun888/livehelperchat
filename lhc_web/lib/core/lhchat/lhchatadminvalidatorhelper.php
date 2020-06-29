@@ -119,8 +119,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 
         if ( $form->hasValidData( 'DepartmentID' )  ) {
             $cannedMessage->department_id = $form->DepartmentID;
+
             if ($userDepartments !== true) {
-                if ($cannedMessage->department_id != 0 && !in_array($cannedMessage->department_id, $userDepartments)) {
+                if (($cannedMessage->department_id == 0 && !erLhcoreClassUser::instance()->hasAccessTo('lhcannedmsg','see_global')) || !in_array($cannedMessage->department_id, $userDepartments)) {
                     $Errors[] =  erTranslationClassLhTranslation::getInstance()->getTranslation('chat/cannedmsg','Please choose a department!');
                 }
             }
@@ -131,6 +132,10 @@ class erLhcoreClassAdminChatValidatorHelper {
             // Perhaps extension did some internal validation and we don't need anymore validate internaly
             if ($response === false) {            
                 $cannedMessage->department_id = 0;
+            }
+
+            if ($cannedMessage->department_id == 0 && !erLhcoreClassUser::instance()->hasAccessTo('lhcannedmsg','see_global')) {
+                $Errors[] =  erTranslationClassLhTranslation::getInstance()->getTranslation('chat/cannedmsg','Please choose a department!');
             }
         }
         
@@ -156,6 +161,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        'NameHidden' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
+            'NameHiddenPrefilled' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
             'NameHiddenBot' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
@@ -179,6 +187,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        'OfflineNameHidden' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
+            'OfflineNameHiddenPrefilled' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
 	        'OfflineNameRequireOption' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'string'
 	        ),
@@ -200,6 +211,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        'EmailHidden' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
+            'EmailHiddenPrefilled' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
             'EmailHiddenBot' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
@@ -218,6 +232,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
 	        'MessageHidden' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
+            'MessageHiddenPrefilled' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
             'MessageHiddenBot' => new ezcInputFormDefinitionElement(
@@ -246,6 +263,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        'OfflineMessageHidden' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
+            'OfflineMessageHiddenPrefilled' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
 	        'OfflineFileVisibleInPopup' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
@@ -266,6 +286,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        'PhoneHidden' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
+            'PhoneHiddenPrefilled' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
             'PhoneHiddenBot' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
@@ -281,6 +304,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
 	        'OfflinePhoneHidden' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
+            'OfflinePhoneHiddenPrefilled' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
 	        'OfflinePhoneRequireOption' => new ezcInputFormDefinitionElement(
@@ -337,6 +363,12 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        'ShowMessagesBox' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
 	        ),
+            'HideStartButton' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
+            'LazyLoad' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
+	        ),
 	    
 	        // Custom fields from back office
 	        'customFieldLabel' => new ezcInputFormDefinitionElement(
@@ -352,6 +384,9 @@ class erLhcoreClassAdminChatValidatorHelper {
 	            ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw', null, FILTER_REQUIRE_ARRAY
 	        ),
 	        'customFieldIsrequired' => new ezcInputFormDefinitionElement(
+	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean', null, FILTER_REQUIRE_ARRAY
+	        ),
+            'customFieldHidePrefilled' => new ezcInputFormDefinitionElement(
 	            ezcInputFormDefinitionElement::OPTIONAL, 'boolean', null, FILTER_REQUIRE_ARRAY
 	        ),
 	        'customFieldDefaultValue' => new ezcInputFormDefinitionElement(
@@ -393,6 +428,18 @@ class erLhcoreClassAdminChatValidatorHelper {
 	        $data['auto_start_chat'] = true;
 	    } else {
 	        $data['auto_start_chat'] = false;
+	    }
+
+	    if ( $form->hasValidData( 'HideStartButton' ) && $form->HideStartButton == true ) {
+	        $data['hide_start_button'] = true;
+	    } else {
+	        $data['hide_start_button'] = false;
+	    }
+
+	    if ( $form->hasValidData( 'LazyLoad' ) && $form->LazyLoad == true ) {
+	        $data['lazy_load'] = true;
+	    } else {
+	        $data['lazy_load'] = false;
 	    }
 
 	    if ( $form->hasValidData( 'MobilePopup' ) && $form->MobilePopup == true ) {
@@ -785,6 +832,7 @@ class erLhcoreClassAdminChatValidatorHelper {
 	                'size' => $form->customFieldSize[$key],
 	                'visibility' => $form->customFieldVisibility[$key],
 	                'isrequired' => ($form->hasValidData('customFieldIsrequired') && isset($form->customFieldIsrequired[$key]) && $form->customFieldIsrequired[$key] == true),
+	                'hide_prefilled' => ($form->hasValidData('customFieldHidePrefilled') && isset($form->customFieldHidePrefilled[$key]) && $form->customFieldHidePrefilled[$key] == true),
 	                'fieldidentifier' => $form->customFieldIdentifier[$key],
 	                'showcondition' => $form->customFieldCondition[$key],
 	            );
@@ -793,7 +841,50 @@ class erLhcoreClassAdminChatValidatorHelper {
 	    } else {
 	        $data['custom_fields'] = '';
 	    }
-	    
+
+        if ( $form->hasValidData( 'NameHiddenPrefilled' ) && $form->NameHiddenPrefilled == true ) {
+            $data['name_hidden_prefilled'] = true;
+        } else {
+            $data['name_hidden_prefilled'] = false;
+        }
+
+        if ( $form->hasValidData( 'EmailHiddenPrefilled' ) && $form->EmailHiddenPrefilled == true ) {
+            $data['email_hidden_prefilled'] = true;
+        } else {
+            $data['email_hidden_prefilled'] = false;
+        }
+
+        if ( $form->hasValidData( 'MessageHiddenPrefilled' ) && $form->MessageHiddenPrefilled == true ) {
+            $data['message_hidden_prefilled'] = true;
+        } else {
+            $data['message_hidden_prefilled'] = false;
+        }
+
+        if ( $form->hasValidData( 'PhoneHiddenPrefilled' ) && $form->PhoneHiddenPrefilled == true ) {
+            $data['phone_hidden_prefilled'] = true;
+        } else {
+            $data['phone_hidden_prefilled'] = false;
+        }
+
+        if ( $form->hasValidData( 'OfflineNameHiddenPrefilled' ) && $form->OfflineNameHiddenPrefilled == true ) {
+            $data['offline_name_hidden_prefilled'] = true;
+        } else {
+            $data['offline_name_hidden_prefilled'] = false;
+        }
+
+        if ( $form->hasValidData( 'OfflineMessageHiddenPrefilled' ) && $form->OfflineMessageHiddenPrefilled == true ) {
+            $data['offline_message_hidden_prefilled'] = true;
+        } else {
+            $data['offline_message_hidden_prefilled'] = false;
+        }
+        
+        if ( $form->hasValidData( 'OfflinePhoneHiddenPrefilled' ) && $form->OfflinePhoneHiddenPrefilled == true ) {
+            $data['offline_phone_hidden_prefilled'] = true;
+        } else {
+            $data['offline_phone_hidden_prefilled'] = false;
+        }
+
+
 	    return $Errors;
     }
 }

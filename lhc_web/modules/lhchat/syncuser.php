@@ -8,13 +8,7 @@ $pollingMessageTimeout = (float)erLhcoreClassModelChatConfig::fetch('sync_sound_
 $db = ezcDbInstance::get();
 $db->beginTransaction();
 
-try {
-    $chat = erLhcoreClassModelChat::fetchAndLock($Params['user_parameters']['chat_id']);
-    $chat->updateIgnoreColumns = array('last_msg_id');
-    erLhcoreClassChat::setTimeZoneByChat($chat);
-} catch (Exception $e) {
-    $chat = false;
-}
+$chat = erLhcoreClassModelChat::fetchAndLock($Params['user_parameters']['chat_id']);
 
 $content = 'false';
 $status = 'true';
@@ -31,7 +25,10 @@ $operatorId = 0;
 $responseArray = array();
 
 if (is_object($chat) && $chat->hash == $Params['user_parameters']['hash'])
-{   
+{
+    $chat->updateIgnoreColumns = array('last_msg_id');
+    erLhcoreClassChat::setTimeZoneByChat($chat);
+
 	try {
 		while (true) {
 	    
@@ -206,7 +203,7 @@ if (is_object($chat) && $chat->hash == $Params['user_parameters']['hash'])
 		    		    		    
 		    if ($chat->status_sub == erLhcoreClassModelChat::STATUS_SUB_SURVEY_SHOW) {
 		    	$blocked = 'true';
-		    	$breakSync = true;		    	
+		    	$breakSync = true;
 		    	$responseArray['closed'] = true;
 		    	$status = erTranslationClassLhTranslation::getInstance()->getTranslation('chat/chat','You have been redirected to survey!');
 		    	if ($chat->status_sub_arg != '') {		    	    
@@ -240,7 +237,15 @@ if (is_object($chat) && $chat->hash == $Params['user_parameters']['hash'])
 		    
 		    if ($saveChat === true || $chat->lsync < time()-30) {
 		        $chat->lsync = time();
-		    	$chat->updateThis();
+		    	$chat->updateThis(array('update' => array(
+		    	    'unanswered_chat',
+		    	    'has_unread_op_messages',
+		    	    'unread_op_messages_informed',
+		    	    'user_status',
+		    	    'operation',
+		    	    'status_sub',
+		    	    'lsync',
+                )));
 		    }
 		    
 		    erLhcoreClassChatEventDispatcher::getInstance()->dispatch('chat.syncuser',array('chat' => & $chat, 'response' => & $responseArray));

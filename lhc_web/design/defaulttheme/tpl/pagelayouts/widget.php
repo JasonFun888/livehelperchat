@@ -8,6 +8,7 @@
             }
         </style>
     <?php  endif; ?>
+<?php $Result['anonymous'] = true; ?>
 <?php include_once(erLhcoreClassDesign::designtpl('pagelayouts/parts/page_head_user.tpl.php'));?>
 
     <?php if (isset($Result['no_mobile_css'])) : ?>
@@ -69,6 +70,27 @@ if (!!window.postMessage) {
 	foreach ($Result['parent_messages'] as $msgPArent) : ?>
 	parent.postMessage("<?php echo $msgPArent?>", '*');
 	<?php endforeach;endif;?>
+
+    function handleCrossMessage(e) {
+        if (typeof e.data !== 'string') { return; }
+        var action = e.data.split(':')[0];
+        if (action == 'lhc_load_ext') {
+            const parts = e.data.replace('lhc_load_ext:','').split('::');
+            lhinst.executeExtension(parts[0],JSON.parse(parts[1]));
+        }
+    }
+
+    if ( window.addEventListener ){
+        // FF
+        window.addEventListener("message", handleCrossMessage, false);
+    } else if ( window.attachEvent ) {
+        // IE
+        window.attachEvent("onmessage", handleCrossMessage);
+    } else if ( document.attachEvent ) {
+        // IE
+        document.attachEvent("onmessage", handleCrossMessage);
+    };
+
     $(window).on('load',function() {
         <?php if (!isset($Result['fullheight']) || (isset($Result['fullheight']) && !$Result['fullheight'])) : ?>
         var currentHeight = heightElement.height();
@@ -85,6 +107,7 @@ if (!!window.postMessage) {
             parent.postMessage("lhc_widget_loaded", '*');
         },300);
     });
+
 };
 </script>
 <?php endif;?>

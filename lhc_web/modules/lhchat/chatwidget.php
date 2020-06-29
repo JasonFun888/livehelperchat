@@ -31,7 +31,8 @@ $modeAppendTheme = '';
 if (isset($Params['user_parameters_unordered']['theme']) && (int)$Params['user_parameters_unordered']['theme'] > 0){
 	try {
 		$theme = erLhAbstractModelWidgetTheme::fetch($Params['user_parameters_unordered']['theme']);
-		$Result['theme'] = $theme;		
+        $theme->translate();
+		$Result['theme'] = $theme;
 		$modeAppendTheme = '/(theme)/'.$theme->id;
 	} catch (Exception $e) {
 
@@ -41,12 +42,17 @@ if (isset($Params['user_parameters_unordered']['theme']) && (int)$Params['user_p
 	if ($defaultTheme > 0) {
 		try {
 			$theme = erLhAbstractModelWidgetTheme::fetch($defaultTheme);
+            $theme->translate();
 			$Result['theme'] = $theme;
 			$modeAppendTheme = '/(theme)/'.$theme->id;
 		} catch (Exception $e) {
 		
 		}
 	}
+}
+
+if ($theme instanceof erLhAbstractModelWidgetTheme && isset($theme->bot_configuration_array['detect_language']) && $theme->bot_configuration_array['detect_language'] == true) {
+    erLhcoreClassChatValidator::setLanguageByBrowser();
 }
 
 if ($fullHeight == true) {
@@ -293,16 +299,12 @@ if (isset($Result['theme'])) {
 if (isset($_POST['StartChat']) && $disabled_department === false)
 {
    // Validate post data
-    $Errors = erLhcoreClassChatValidator::validateStartChat($inputData,$startDataFields,$chat,$additionalParams);
-
+    $Errors = erLhcoreClassChatValidator::validateStartChat($inputData,$startDataFields,$chat, $additionalParams);
+    
 	erLhcoreClassChatEventDispatcher::getInstance()->dispatch('chat.before_chat_started', array('chat' => & $chat, 'errors' => & $Errors, 'offline' => (isset($additionalParams['offline']) && $additionalParams['offline'] == true)));
 
    if (count($Errors) == 0 && !isset($_POST['switchLang']))
    {   	
-   		$chat->setIP();
-        $chat->lsync = time();
-   		erLhcoreClassModelChat::detectLocation($chat);
-   		
    		$statusGeoAdjustment = erLhcoreClassChat::getAdjustment(erLhcoreClassModelChatConfig::fetch('geoadjustment_data')->data_value, $inputData->vid);
 
    		if ($statusGeoAdjustment['status'] == 'hidden') { // This should never happen
@@ -340,7 +342,7 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
    			$tpl->set('request_send',true);
    		} else {
 	       $chat->time = $chat->pnd_time = time();
-	       $chat->status = 0;
+	       $chat->status = erLhcoreClassModelChat::STATUS_PENDING_CHAT;
 
 	       $chat->hash = erLhcoreClassChat::generateHash();
 	       $chat->referrer = isset($_POST['URLRefer']) ? $_POST['URLRefer'] : '';
@@ -349,7 +351,7 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
 	       $nick = trim($chat->nick);
 
 	       if ( empty($nick) ) {
-	           $chat->nick = erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Visitor');
+	           $chat->nick = 'Visitor';
 	       }
 	       
 	       try {
@@ -370,13 +372,13 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
     	                $userInstance->message_seen = 1;
     	                $userInstance->message_seen_ts = time();
 
-    	                if ($chat->nick != erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Visitor')) {
+    	                if ($chat->nick != 'Visitor') {
     	                    $onlineAttr = $userInstance->online_attr_system_array;
     	                    if (!isset($onlineAttr['username'])){
                                 $onlineAttr['username'] = $chat->nick;
                                 $userInstance->online_attr_system = json_encode($onlineAttr);
                             }
-                        } elseif ($chat->nick == erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Visitor')){
+                        } elseif ($chat->nick == 'Visitor'){
                             if ($userInstance->nick && $userInstance->has_nick) {
                                 $chat->nick = $userInstance->nick;
                             }
@@ -385,7 +387,7 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
     	                $userInstance->saveThis();
     
     	                $chat->online_user_id = $userInstance->id;
-    	                $chat->saveThis();
+    	                $chat->updateThis();
 
     	                if ( erLhcoreClassModelChatConfig::fetch('track_footprint')->current_value == 1) {
     	            		erLhcoreClassModelChatOnlineUserFootprint::assignChatToPageviews($userInstance, erLhcoreClassModelChatConfig::fetch('footprint_background')->current_value == 1);
@@ -412,7 +414,7 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
     	               	               
     	               $chat->unanswered_chat = 1;
     	               $chat->last_msg_id = $msg->id;
-    	               $chat->saveThis();
+    	               $chat->updateThis(array('update' => array('unanswered_chat','last_msg_id')));
     	           }
     	       }
 
@@ -420,8 +422,10 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
                    $paramsExecution['bot_id'] = $inputData->bot_id;
                }
 
-               // Set bot workflow if required
-               erLhcoreClassChatValidator::setBot($chat, $paramsExecution);
+               if (!isset($_POST['ignoreBot'])) {
+                   // Set bot workflow if required
+                   erLhcoreClassChatValidator::setBot($chat, $paramsExecution);
+               }
 
     	       // Auto responder does not make sense in this mode
     	       if ($inputData->key_up_started == false) {
@@ -444,20 +448,33 @@ if (isset($_POST['StartChat']) && $disabled_department === false)
 
                            erLhcoreClassChatEventDispatcher::getInstance()->dispatch('chat.before_auto_responder_message',array('chat' => & $chat, 'responder' => & $responder));
 
-    					   if ($responder->wait_message != '' && $chat->status !== erLhcoreClassModelChat::STATUS_BOT_CHAT) {
-    						   $msg = new erLhcoreClassModelmsg();
-    						   $msg->msg = trim($responder->wait_message);
-                               $msg->meta_msg = $responder->getMeta($chat, 'pending');
-    						   $msg->chat_id = $chat->id;
-    						   $msg->name_support = $responder->operator != '' ? $responder->operator : erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Live Support');
-    						   $msg->user_id = -2;
-    						   $msg->time = time() + 5;
-    						   erLhcoreClassChat::getSession()->save($msg);
-    
-    						   if ($chat->last_msg_id < $msg->id) {
-    							   $chat->last_msg_id = $msg->id;
-    						   }
-    					   }
+                           if ($chat->status !== erLhcoreClassModelChat::STATUS_BOT_CHAT) {
+                               $messageText = '';
+
+                               if ($responder->offline_message != '' && !erLhcoreClassChat::isOnline($chat->dep_id, false, array(
+                                       'online_timeout' => (int) erLhcoreClassModelChatConfig::fetch('sync_sound_settings')->data['online_timeout'],
+                                       'ignore_user_status' => false
+                                   ))) {
+                                   $messageText = $responder->offline_message;
+                               } else {
+                                   $messageText = $responder->wait_message;
+                               }
+
+                               if ($messageText != '') {
+                                   $msg = new erLhcoreClassModelmsg();
+                                   $msg->msg = trim($messageText);
+                                   $msg->meta_msg = $responder->getMeta($chat, 'pending');
+                                   $msg->chat_id = $chat->id;
+                                   $msg->name_support = $responder->operator != '' ? $responder->operator : erTranslationClassLhTranslation::getInstance()->getTranslation('chat/startchat','Live Support');
+                                   $msg->user_id = -2;
+                                   $msg->time = time() + 5;
+                                   erLhcoreClassChat::getSession()->save($msg);
+
+                                   if ($chat->last_msg_id < $msg->id) {
+                                       $chat->last_msg_id = $msg->id;
+                                   }
+                               }
+       					   }
     
     					   $chat->saveThis();
     
@@ -715,6 +732,24 @@ $Result['pagelayout'] = 'widget';
 $Result['dynamic_height'] = true;
 $Result['dynamic_height_message'] = 'lhc_sizing_chat';
 $Result['pagelayout_css_append'] = 'widget-chat';
+
+$chatInitData = array();
+
+if (isset($inputData->vid) && !empty($inputData->vid)) {
+    $chatInitData['vid'] = $inputData->vid;
+}
+
+if (isset($inputData->username) && !empty($inputData->username)) {
+    $chatInitData['username'] = $inputData->username;
+}
+
+if (isset($inputData->departament_id) && is_numeric($inputData->departament_id)) {
+    $chatInitData['dep_id'] = $inputData->departament_id;
+}
+
+if (!empty($chatInitData)) {
+    $Result['chat_init_data'] = $chatInitData;
+}
 
 if ($noMobile === true) {
     $Result['no_mobile_css'] = true;

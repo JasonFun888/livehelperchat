@@ -9,6 +9,8 @@ return array(
     ),
     'operator_name' => array(
         'type' => 'text',
+        'translatable' => true,
+        'main_attr_lang' => 'design_data_array',
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Operator name'),
         'required' => false,
         'hidden' => true,
@@ -148,7 +150,7 @@ return array(
         'required' => false,
         'hidden' => true,
         'source' => 'erLhAbstractModelAutoResponder::getList',
-        'params_call' => array(),
+        'params_call' => array('filter' => array('user_id' => 0)),
         'validation_definition' => new ezcInputFormDefinitionElement(ezcInputFormDefinitionElement::OPTIONAL, 'int')
     ),
     'dep_id' => array(
@@ -157,12 +159,8 @@ return array(
         'required' => false,
         'hidden' => true,
         'source' => 'erLhcoreClassModelDepartament::getList',
-        'hide_optional' => false/*$userDepartments !== true*/,
-        'params_call' => ($userDepartments === true) ? array() : array(
-            'filterin' => array(
-                'id' => $userDepartments
-            )
-        ),
+        'hide_optional' => !empty($departmentFilterdefault = erLhcoreClassUserDep::conditionalDepartmentFilter()),
+        'params_call' => $departmentFilterdefault,
         'validation_definition' => new ezcInputFormDefinitionElement(ezcInputFormDefinitionElement::OPTIONAL, 'int')
     ),
     'campaign_id' => array(
@@ -213,6 +211,8 @@ return array(
     ),
     'message' => array(
         'type' => 'textarea',
+        'translatable' => true,
+        'main_attr_lang' => 'design_data_array',
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Message to user'),
         'required' => true,
         'hidden' => true,
@@ -220,12 +220,16 @@ return array(
     ),
     'message_returning' => array(
         'type' => 'textarea',
+        'translatable' => true,
+        'main_attr_lang' => 'design_data_array',
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Message to returning user'),
         'required' => false,
         'hidden' => true,
         'validation_definition' => new ezcInputFormDefinitionElement(ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw')
     ),
     'message_returning_nick' => array(
+        'translatable' => true,
+        'main_attr_lang' => 'design_data_array',
         'type' => 'text',
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Nick which will be used if we cannot determine returning user name'),
         'required' => false,
@@ -251,7 +255,7 @@ return array(
     ),
     'iddle_for' => array(
         'type' => 'text',
-        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Show invitation if visitor is iddle for n seconds'),
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Show invitation if visitor is idle for n seconds'),
         'required' => false,
         'hidden' => true,
         'validation_definition' => new ezcInputFormDefinitionElement(ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw')

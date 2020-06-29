@@ -6,18 +6,53 @@
         </div>
         <div class="modal-body">
             <p>
-                <?php if ($context == 'text') : ?>
+            <?php if ($context == 'text') : ?>
+                <ul>
+                    <li>{<translation>__default message__t[show from hour, show till hour]} inclusive is first hour. Few examples
+                            <ul>
+                                <li>Default message</li>
+                                <li>{welcome_message__Welcome to our website}</li>
+                                <li>{good_evening__Good evening__t[17:24]} - Show this message from 17 until midnight</li>
+                                <li>{good_morning__Good morning__t[0:17]} - Show this message from midnight until evening</li>
+                            </ul>
+                    </li>
+                </ul>
+            <?php endif; ?>
+
+            <?php if ($context == 'execute_js') : ?>
+                <ul>
+                    <li>Few example. If you are using new widget you can execute the following examples
+                        <ul>
+                            <li>alert('Hello')</li>
+                            <li>console.log(window.parent)</li>
+                            <li>window.parent.document.body.style = "background-color: red";</li>
+                            <li>window.parent.document.title = "Change main window title";</li>
+                            <li>window.parent.callMe()</li>
+                        </ul>
+                    </li>
+                </ul>
+            <?php endif; ?>
+
+            <?php if ($context == 'attribute_identifier') : ?>
+            <ul>
+                <li>Few examples
                     <ul>
-                        <li>{<translation>__default message__t[show from hour, show till hour]} inclusive is first hour. Few examples
-                                <ul>
-                                    <li>Default message</li>
-                                    <li>{welcome_message__Welcome to our website}</li>
-                                    <li>{good_evening__Good evening__t[17:24]} - Show this message from 17 until midnight</li>
-                                    <li>{good_morning__Good morning__t[0:17]} - Show this message from midnight until evening</li>
-                                </ul>
-                        </li>
+                        <li><strong>lhc.email</strong> - set user provided data as chat e-mail</li>
+                        <li><strong>lhc.nick</strong> - set user provided data as visitor username</li>
+                        <li><strong>lhc.phone</strong> - set user provided data as visitor phone</li>
+                        <li><strong>order_number</strong> - non internal attribute. Can be anything. Like order number</li>
                     </ul>
-                <?php endif; ?>
+                </li>
+            </ul>
+            <?php endif; ?>
+
+            <?php if ($context == 'attribute_name') : ?>
+                <p>This field be used only if you are collecting non internal attribute. This will be used as display name for that attribute in back office.</p>
+            <?php endif; ?>
+
+            <?php if ($context == 'execute_tbody') : ?>
+                <p>You can use this field as response body from your Rest API integration. You can paste content from `Show code` section.</p>
+            <?php endif; ?>
 
             <?php if ($context == 'preg_match') : ?>
                     <ul>

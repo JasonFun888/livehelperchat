@@ -11,6 +11,7 @@ return array(
         )),
     'name' => array(
         'type' => 'text',
+        'maxlength' => 50,
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Name'),
         'required' => false,
         'validation_definition' => new ezcInputFormDefinitionElement(
@@ -18,6 +19,7 @@ return array(
         )),
     'operator' => array(
         'type' => 'text',
+        'maxlength' => 50,
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Operator. Visitor will see this operator nick.'),
         'required' => false,
         'validation_definition' => new ezcInputFormDefinitionElement(
@@ -30,30 +32,6 @@ return array(
         'hidden' => true,
         'validation_definition' => new ezcInputFormDefinitionElement(
             ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw'
-        )),
-    'pending_bot_id' => array(
-        'type' => 'combobox',
-        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
-        'required' => false,
-        'frontend' => 'name',
-        'hidden' => true,
-        'source' => 'erLhcoreClassModelGenericBotBot::getList',
-        'params_call' => array(),
-        'main_attr' => 'bot_configuration_array',
-        'validation_definition' => new ezcInputFormDefinitionElement(
-            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
-        )),
-    'pending_trigger_id' => array(
-        'type' => 'combobox',
-        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a trigger'),
-        'required' => false,
-        'hidden' => true,
-        'frontend' => 'name',
-        'source' => 'erLhcoreClassModelGenericBotTrigger::getList',
-        'main_attr' => 'bot_configuration_array',
-        'params_call' => array('filter' => array('bot_id' => (isset($this->bot_configuration_array['pending_bot_id']) ? $this->bot_configuration_array['pending_bot_id'] : 0))),
-        'validation_definition' => new ezcInputFormDefinitionElement(
-            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
         )),
     'nreply_bot_id' => array(
         'type' => 'combobox',
@@ -135,6 +113,17 @@ return array(
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Department'),
         'required' => false,
         'frontend' => 'dep_frontend',
+        'source' => 'erLhcoreClassModelDepartament::getList',
+        'hide_optional' => !empty($departmentFilterdefault = erLhcoreClassUserDep::conditionalDepartmentFilter()),
+        'params_call' => $departmentFilterdefault,
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int'
+        )),
+     'user_id' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'User'),
+        'required' => false,
+        'frontend' => 'user',
         'source' => 'erLhcoreClassModelDepartament::getList',
         'hide_optional' => false,
         'params_call' => array(),
@@ -408,7 +397,6 @@ return array(
             'validation_definition' => new ezcInputFormDefinitionElement(
                 ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw'
         )),
-
         'timeout_op_reply_message_1' => array(
             'type' => 'textarea',
             'height' => '86px',
@@ -505,7 +493,36 @@ return array(
         'validation_definition' => new ezcInputFormDefinitionElement(
             ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
         )),
-
+        'close_message' => array(
+        'type' => 'textarea',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Message to visitor on chat close'),
+        'height' => '86px',
+        'required' => false,
+        'hidden' => true,
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw', array()
+        )),
+        'offline_message' => array(
+        'type' => 'textarea',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Message to visitor if department is offline'),
+        'height' => '86px',
+        'required' => false,
+        'hidden' => true,
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw', array()
+        )),
+        'multilanguage_message' => array(
+        'type' => 'textarea',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/proactivechatinvitation', 'Message to visitor if operator speaks same language as visitor.'),
+        'height' => '86px',
+        'required' => false,
+        'hidden' => true,
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'unsafe_raw', array()
+        )),
         'nreply_op_bot_id_1' => array(
         'type' => 'combobox',
         'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
@@ -695,5 +712,132 @@ return array(
         'required' => false,
         'validation_definition' => new ezcInputFormDefinitionElement(
             ezcInputFormDefinitionElement::OPTIONAL, 'boolean'
-        ))
+        )),
+
+
+    'pending_op_bot_id_1' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
+        'required' => false,
+        'frontend' => 'name',
+        'hidden' => true,
+        'source' => 'erLhcoreClassModelGenericBotBot::getList',
+        'params_call' => array(),
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+    'pending_op_1_trigger_id' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a trigger'),
+        'required' => false,
+        'hidden' => true,
+        'frontend' => 'name',
+        'source' => 'erLhcoreClassModelGenericBotTrigger::getList',
+        'main_attr' => 'bot_configuration_array',
+        'params_call' => array('filter' => array('bot_id' => (isset($this->bot_configuration_array['pending_op_bot_id_1']) ? $this->bot_configuration_array['pending_op_bot_id_1'] : 0))),
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+
+    'pending_op_bot_id_2' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
+        'required' => false,
+        'frontend' => 'name',
+        'hidden' => true,
+        'source' => 'erLhcoreClassModelGenericBotBot::getList',
+        'params_call' => array(),
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+    'pending_op_2_trigger_id' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a trigger'),
+        'required' => false,
+        'hidden' => true,
+        'frontend' => 'name',
+        'source' => 'erLhcoreClassModelGenericBotTrigger::getList',
+        'main_attr' => 'bot_configuration_array',
+        'params_call' => array('filter' => array('bot_id' => (isset($this->bot_configuration_array['pending_op_bot_id_2']) ? $this->bot_configuration_array['pending_op_bot_id_2'] : 0))),
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+
+    'pending_op_bot_id_3' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
+        'required' => false,
+        'frontend' => 'name',
+        'hidden' => true,
+        'source' => 'erLhcoreClassModelGenericBotBot::getList',
+        'params_call' => array(),
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+    'pending_op_3_trigger_id' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a trigger'),
+        'required' => false,
+        'hidden' => true,
+        'frontend' => 'name',
+        'source' => 'erLhcoreClassModelGenericBotTrigger::getList',
+        'main_attr' => 'bot_configuration_array',
+        'params_call' => array('filter' => array('bot_id' => (isset($this->bot_configuration_array['pending_op_bot_id_3']) ? $this->bot_configuration_array['pending_op_bot_id_3'] : 0))),
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+
+    'pending_op_bot_id_4' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
+        'required' => false,
+        'frontend' => 'name',
+        'hidden' => true,
+        'source' => 'erLhcoreClassModelGenericBotBot::getList',
+        'params_call' => array(),
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+    'pending_op_4_trigger_id' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a trigger'),
+        'required' => false,
+        'hidden' => true,
+        'frontend' => 'name',
+        'source' => 'erLhcoreClassModelGenericBotTrigger::getList',
+        'main_attr' => 'bot_configuration_array',
+        'params_call' => array('filter' => array('bot_id' => (isset($this->bot_configuration_array['pending_op_bot_id_4']) ? $this->bot_configuration_array['pending_op_bot_id_4'] : 0))),
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+
+    'pending_op_bot_id_5' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a bot'),
+        'required' => false,
+        'frontend' => 'name',
+        'hidden' => true,
+        'source' => 'erLhcoreClassModelGenericBotBot::getList',
+        'params_call' => array(),
+        'main_attr' => 'bot_configuration_array',
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+    'pending_op_5_trigger_id' => array(
+        'type' => 'combobox',
+        'trans' => erTranslationClassLhTranslation::getInstance()->getTranslation('abstract/widgettheme', 'Choose a trigger'),
+        'required' => false,
+        'hidden' => true,
+        'frontend' => 'name',
+        'source' => 'erLhcoreClassModelGenericBotTrigger::getList',
+        'main_attr' => 'bot_configuration_array',
+        'params_call' => array('filter' => array('bot_id' => (isset($this->bot_configuration_array['pending_op_bot_id_5']) ? $this->bot_configuration_array['pending_op_bot_id_5'] : 0))),
+        'validation_definition' => new ezcInputFormDefinitionElement(
+            ezcInputFormDefinitionElement::OPTIONAL, 'int', array('min_range' => 0)
+        )),
+
 );

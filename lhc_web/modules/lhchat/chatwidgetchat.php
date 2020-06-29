@@ -21,6 +21,7 @@ if ((string)$Params['user_parameters_unordered']['mobile'] == 'false') {
 if (isset($Params['user_parameters_unordered']['theme']) && (int)$Params['user_parameters_unordered']['theme'] > 0){
 	try {
 		$theme = erLhAbstractModelWidgetTheme::fetch($Params['user_parameters_unordered']['theme']);
+        $theme->translate();
 		$Result['theme'] = $theme;
 		$tpl->set('theme',$theme);
 		$modeAppend .= '/(theme)/'.$theme->id;
@@ -124,8 +125,19 @@ try {
                 $chat->unanswered_chat = 0;
             }
             
-            erLhcoreClassChat::getSession()->update($chat);
-        }        
+            $chat->updateThis(array('update' => array(
+                'unanswered_chat',
+                'operation_admin',
+                'nick',
+                'user_status',
+                'has_unread_op_messages',
+                'unread_op_messages_informed',
+                'user_typing_txt',
+                'support_informed',
+                'user_typing',
+                'is_user_typing'
+            )));
+        }
 
         $db->commit();
 
